@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Mobile Optimization -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <title>Admin Dashboard - Mark's Inventory</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.985.0.min.js"></script>
+</head>
+<body class="admin-dashboard">
+    <!-- Navigation Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-warehouse"></i>
+                <h2>Mark's Inventory</h2>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-content">
+            <!-- User Info -->
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="user-details">
+                    <h3 id="userName">Admin User</h3>
+                    <span class="user-role">Administrator</span>
+                </div>
+            </div>
+            
+            <!-- Shop Selector -->
+            <div class="shop-selector">
+                <label><i class="fas fa-store"></i> View Shop</label>
+                <select id="shopFilter" class="shop-filter">
+                    <option value="all">All Shops</option>
+                    <option value="Raymakossa">Raymakossa</option>
+                    <option value="Tarso">Tarso</option>
+                    <option value="Market">Market</option>
+                </select>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <ul class="nav-menu">
+                <li>
+                    <a href="#dashboard" class="nav-link active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#products" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        <span>Products</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#shops" class="nav-link">
+                        <i class="fas fa-store"></i>
+                        <span>Shops Overview</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#reports" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#attendance" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Attendance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#alerts" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span>Alerts</span>
+                        <span class="badge" id="alertCount">0</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Logout -->
+            <div class="sidebar-footer">
+                <button id="refreshBtn" class="btn btn-icon">
+                    <i class="fas fa-redo"></i> Refresh Data
+                </button>
+                <button id="logoutBtn" class="btn btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="content-header">
+            <div class="header-left">
+                <h1 id="pageTitle">Dashboard</h1>
+                <p id="pageSubtitle" class="subtitle">System Overview</p>
+            </div>
+            <div class="header-right">
+                <div class="last-updated">
+                    <i class="fas fa-sync-alt"></i>
+                    Updated: <span id="lastUpdated">Just now</span>
+                </div>
+                <div class="real-time-indicator">
+                    <i class="fas fa-circle"></i>
+                    <span>Real-time</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Sections -->
+        <div class="content-sections">
+            <!-- Dashboard Section -->
+            <section id="dashboardSection" class="content-section active">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon total-sales">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Sales</h3>
+                            <p class="stat-value" id="totalSales">₵0.00</p>
+                            <p class="stat-change" id="salesChange">Today</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon total-products">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Products</h3>
+                            <p class="stat-value" id="totalProducts">0</p>
+                            <p class="stat-change" id="productsChange">Across all shops</p>
+                        </div>
+                    </div>
+
+                    
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon low-stock">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Low Stock</h3>
+                            <p class="stat-value" id="lowStockCount">0</p>
+                            <p class="stat-change" id="lowStockShops">Items</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon active-attendants">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Active Attendants</h3>
+                            <p class="stat-value" id="activeAttendants">0</p>
+                            <p class="stat-change" id="attendantStatus">Clocked in</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Real-time Updates -->
+                <div class="updates-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-bolt"></i> Real-time Updates</h3>
+                        <button class="btn btn-text" id="clearUpdates">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                    <div class="updates-list" id="updatesList">
+                        <div class="update-item">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <p>Waiting for updates...</p>
+                                <small>System ready</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Shop Performance -->
+                <div class="shops-performance">
+                    <h3>Shop Performance</h3>
+                    <div class="shops-grid" id="shopsPerformance">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products Management Section -->
+            <section id="productsSection" class="content-section">
+                <div class="section-header">
+                    <h2>Products Management</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" id="addProductBtn">
+                            <i class="fas fa-plus"></i> Add Product
+                        </button>
+                        <button class="btn btn-outline" id="exportProducts">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Products Table -->
+                <div class="table-container">
+                    <table class="data-table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>Product ID</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price (₵)</th>
+                                <th>Stock</th>
+                                <th>Shop</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- Loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Products Summary -->
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h4>Total Value</h4>
+                        <p class="summary-value" id="totalInventoryValue">₵0.00</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Average Price</h4>
+                        <p class="summary-value" id="averagePrice">₵0.00</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Out of Stock</h4>
+                        <p class="summary-value" id="outOfStockCount">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shops Overview Section -->
+            <section id="shopsSection" class="content-section">
+                <div class="section-header">
+                    <h2>Shops Overview</h2>
+                    <div class="shop-filters">
+                        <button class="btn btn-outline active" data-filter="all">All</button>
+                        <button class="btn btn-outline" data-filter="Raymakossa">Raymakossa</button>
+                        <button class="btn btn-outline" data-filter="Tarso">Tarso</button>
+                        <button class="btn btn-outline" data-filter="Market">Market</button>
+                    </div>
+                </div>
+                
+                <!-- Shop Comparison -->
+                <div class="shop-comparison">
+                    <div class="comparison-card">
+                        <h3>Inventory Comparison</h3>
+                        <div class="comparison-chart" id="inventoryChart">
+                            <!-- Chart will be rendered here -->
+                        </div>
+                    </div>
+                    
+                    <div class="shop-details-grid" id="shopDetailsGrid">
+                        <!-- Shop details loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reportsSection" class="content-section">
+                <div class="section-header">
+                    <h2>Reports & Analytics</h2>
+                    <div class="report-controls">
+                        <select id="reportType" class="report-select">
+                            <option value="sales">Sales Report</option>
+                            <option value="stock">Stock Levels</option>
+                            <option value="attendance">Attendance</option>
+                            <option value="performance">Performance</option>
+                        </select>
+                        <input type="date" id="reportDate" class="date-picker">
+                        <button class="btn btn-primary" id="generateReport">
+                            <i class="fas fa-chart-bar"></i> Generate
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Report Display -->
+                <div class="report-display">
+                    <div class="report-header">
+                        <h3 id="reportTitle">Sales Report</h3>
+                        <button class="btn btn-outline" id="printReport">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                    </div>
+                    <div class="report-content" id="reportContent">
+                        <!-- Report will be loaded here -->
+                        <div class="empty-report">
+                            <i class="fas fa-chart-line"></i>
+                            <p>Select report type and click Generate</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Attendance Section -->
+            <section id="attendanceSection" class="content-section">
+                <!-- Similar structure for attendance -->
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alertsSection" class="content-section">
+                <!-- Similar structure for alerts -->
+            </section>
+        </div>
+
+        <!-- Modals -->
+        <div id="productModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Add Product</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <form id="productForm" class="modal-form">
+                    <input type="hidden" id="productId">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productName">Product Name *</label>
+                            <input type="text" id="productName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory">Category *</label>
+                            <select id="productCategory" required>
+                                <option value="">Select Category</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="clothing">Clothing</option>
+                                <option value="food">Food & Beverages</option>
+                                <option value="home">Home Goods</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productPrice">Price (₵) *</label>
+                            <input type="number" id="productPrice" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productStock">Initial Stock *</label>
+                            <input type="number" id="productStock" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productShops">Assign to Shops *</label>
+                        <div class="shop-checkboxes">
+                            <label>
+                                <input type="checkbox" name="shop" value="Raymakossa">
+                                Raymakossa Shop
+                            </label>
+                            <label>
+                                <input type="checkbox" name="shop" value="Tarso">
+                                Tarso Shop
+                            </label>
+                            <label>
+                                <input type="checkbox" name="shop" value="Market">
+                                Market Shop
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productDescription">Description</label>
+                        <textarea id="productDescription" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-text modal-close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="api.js"></script>
+    <script type="module" src="admin.js"></script>
+    
+    <script>
+        // Sidebar toggle for mobile
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = link.getAttribute('href').substring(1);
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Update page title
+                const pageTitle = document.getElementById('pageTitle');
+                const pageSubtitle = document.getElementById('pageSubtitle');
+                
+                switch(target) {
+                    case 'dashboard':
+                        pageTitle.textContent = 'Dashboard';
+                        pageSubtitle.textContent = 'System Overview';
+                        break;
+                    case 'products':
+                        pageTitle.textContent = 'Products Management';
+                        pageSubtitle.textContent = 'Manage inventory items';
+                        break;
+                    case 'shops':
+                        pageTitle.textContent = 'Shops Overview';
+                        pageSubtitle.textContent = 'Compare shop performance';
+                        break;
+                    case 'reports':
+                        pageTitle.textContent = 'Reports & Analytics';
+                        pageSubtitle.textContent = 'Generate and view reports';
+                        break;
+                }
+
+                // debug-console.js - Add this to your dashboard pages
+function debugAuth() {
+    console.log('=== AUTH DEBUG ===');
+    console.log('Token exists:', !!localStorage.getItem('marks_inventory_token'));
+    console.log('Token:', localStorage.getItem('marks_inventory_token')?.substring(0, 50) + '...');
+    console.log('User:', JSON.parse(localStorage.getItem('marks_inventory_user') || '{}'));
+    console.log('Shop:', localStorage.getItem('marks_selected_shop'));
+}
+
+function debugAPI() {
+    console.log('=== API DEBUG ===');
+    console.log('Admin API:', 'https://dnbeyd9uy7.execute-api.us-east-1.amazonaws.com/prod');
+    console.log('Shop API:', 'https://itkfalyn4k.execute-api.us-east-1.amazonaws.com/prod');
+    
+    // Test API connection
+    fetch('https://dnbeyd9uy7.execute-api.us-east-1.amazonaws.com/prod/product', {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('marks_inventory_token')}`
+        }
+    })
+    .then(response => {
+        console.log('API Response Status:', response.status);
+        console.log('API Response OK:', response.ok);
+        return response.text();
+    })
+    .then(text => {
+        console.log('API Response:', text.substring(0, 200));
+    })
+    .catch(error => {
+        console.error('API Test Error:', error);
+    });
+}
+
+// Add to window for console access
+window.debugAuth = debugAuth;
+window.debugAPI = debugAPI;
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Page loaded - Debug functions available: debugAuth(), debugAPI()');
+    debugAuth();
+});
+                
+                // Show target section
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(`${target}Section`).classList.add('active');
+            });
+        });
+
+        // Modal handling
+        const modal = document.getElementById('productModal');
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        document.getElementById('addProductBtn').addEventListener('click', () => {
+            document.getElementById('modalTitle').textContent = 'Add New Product';
+            document.getElementById('productForm').reset();
+            modal.classList.add('active');
+        });
+
+        // Close modal on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

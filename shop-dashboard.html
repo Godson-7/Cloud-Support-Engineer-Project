@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Mobile Optimization -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <title>Shop Dashboard - Mark's Inventory</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.985.0.min.js"></script>
+</head>
+<body class="shop-dashboard">
+    <!-- Top Navigation -->
+    <nav class="shop-nav">
+        <div class="nav-content">
+            <div class="nav-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="shop-brand">
+                    <i class="fas fa-store"></i>
+                    <h2 id="shopName">Shop Dashboard</h2>
+                </div>
+            </div>
+            
+            <div class="nav-center">
+                <div class="attendant-status">
+                    <div class="status-indicator" id="statusIndicator">
+                        <i class="fas fa-user-clock"></i>
+                        <span id="statusText">Not Clocked In</span>
+                    </div>
+                    <button class="btn btn-sm" id="clockBtn">
+                        <i class="fas fa-clock"></i> Clock In
+                    </button>
+                </div>
+            </div>
+            
+            <div class="nav-right">
+                <div class="user-menu">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="attendantName">Attendant</span>
+                        <small id="attendantRole">Shop Attendant</small>
+                    </div>
+                    <button class="btn btn-icon" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="shop-layout">
+        <!-- Sidebar -->
+        <aside class="shop-sidebar" id="shopSidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-tachometer-alt"></i> Quick Actions</h3>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Shop Stats -->
+                <div class="shop-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-boxes"></i>
+                        <div>
+                            <h4>Total Products</h4>
+                            <p id="shopProductCount">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div>
+                            <h4>Today's Sales</h4>
+                            <p id="todaySales">₵0.00</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <ul class="shop-menu">
+                    <li>
+                        <a href="#products" class="shop-menu-link active">
+                            <i class="fas fa-box-open"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#sales" class="shop-menu-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Record Sale</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#notes" class="shop-menu-link">
+                            <i class="fas fa-sticky-note"></i>
+                            <span>Daily Notes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#history" class="shop-menu-link">
+                            <i class="fas fa-history"></i>
+                            <span>Sales History</span>
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="btn btn-block" id="refreshShopData">
+                        <i class="fas fa-redo"></i> Refresh
+                    </button>
+                    <button class="btn btn-outline btn-block" id="lowStockBtn">
+                        <i class="fas fa-exclamation-triangle"></i> Low Stock
+                        <span class="badge" id="lowStockBadge">0</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="shop-main">
+            <!-- Products Section -->
+            <section id="productsSection" class="shop-section active">
+                <div class="section-header">
+                    <h2>Shop Products</h2>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="productSearch" placeholder="Search products...">
+                    </div>
+                </div>
+                
+                <!-- Products Grid -->
+                <div class="products-grid" id="shopProductsGrid">
+                    <!-- Products loaded dynamically -->
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading products...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sales Section -->
+            <section id="salesSection" class="shop-section">
+                <div class="section-header">
+                    <h2>Record Sale</h2>
+                    <div class="sale-info">
+                        <div class="sale-id">
+                            Sale #<span id="saleId">0001</span>
+                        </div>
+                        <div class="sale-date">
+                            <i class="fas fa-calendar"></i>
+                            <span id="currentDate">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sale-container">
+                    <!-- Product Selection -->
+                    <div class="sale-left">
+                        <div class="sale-search">
+                            <input type="text" id="saleProductSearch" 
+                                   placeholder="Search product to add...">
+                            <button class="btn btn-icon">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="product-list" id="saleProductList">
+                            <!-- Products for sale selection -->
+                        </div>
+                    </div>
+                    
+                    <!-- Cart -->
+                    <div class="sale-right">
+                        <div class="cart-header">
+                            <h3><i class="fas fa-shopping-cart"></i> Sale Cart</h3>
+                            <button class="btn btn-text" id="clearCart">
+                                Clear All
+                            </button>
+                        </div>
+                        
+                        <div class="cart-items" id="cartItems">
+                            <div class="empty-cart">
+                                <i class="fas fa-shopping-cart"></i>
+                                <p>No items in cart</p>
+                                <small>Add products from the left</small>
+                            </div>
+                        </div>
+                        
+                        <div class="cart-summary">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span id="cartSubtotal">₵0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax</span>
+                                <span id="cartTax">₵0.00</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total</span>
+                                <span id="cartTotal">₵0.00</span>
+                            </div>
+                            
+                            <div class="cart-actions">
+                                <button class="btn btn-primary btn-block" id="processSale" disabled>
+                                    <i class="fas fa-check-circle"></i> Process Sale
+                                </button>
+                                <button class="btn btn-outline btn-block" id="cancelSale">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Notes Section -->
+            <section id="notesSection" class="shop-section">
+                <div class="section-header">
+                    <h2>Daily Notes</h2>
+                    <button class="btn btn-primary" id="addNoteBtn">
+                        <i class="fas fa-plus"></i> Add Note
+                    </button>
+                </div>
+                
+                <div class="notes-container">
+                    <div class="note-editor">
+                        <textarea id="noteEditor" placeholder="Enter your daily note here..."></textarea>
+                        <div class="editor-actions">
+                            <button class="btn btn-text" id="saveNote">
+                                <i class="fas fa-save"></i> Save Note
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="notes-list" id="notesList">
+                        <!-- Notes loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section id="historySection" class="shop-section">
+                <div class="section-header">
+                    <h2>Sales History</h2>
+                    <div class="history-filters">
+                        <select id="historyFilter">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="history-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div>
+                            <h4>Total Revenue</h4>
+                            <p id="totalRevenue">₵0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-shopping-cart"></i>
+                        <div>
+                            <h4>Total Sales</h4>
+                            <p id="totalSalesCount">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-box"></i>
+                        <div>
+                            <h4>Items Sold</h4>
+                            <p id="totalItemsSold">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="salesHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>Sale ID</th>
+                                <th>Time</th>
+                                <th>Items</th>
+                                <th>Amount (₵)</th>
+                                <th>Attendant</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesHistoryBody">
+                            <!-- Loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="productDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="productDetailTitle"></h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="productDetailBody">
+                <!-- Product details -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="api.js"></script>
+    <script type="module" src="shop.js"></script>
+    
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            document.getElementById('shopSidebar').classList.add('active');
+        });
+
+        document.getElementById('sidebarClose').addEventListener('click', () => {
+            document.getElementById('shopSidebar').classList.remove('active');
+        });
+
+        // debug-console.js - Add this to your dashboard pages
+function debugAuth() {
+    console.log('=== AUTH DEBUG ===');
+    console.log('Token exists:', !!localStorage.getItem('marks_inventory_token'));
+    console.log('Token:', localStorage.getItem('marks_inventory_token')?.substring(0, 50) + '...');
+    console.log('User:', JSON.parse(localStorage.getItem('marks_inventory_user') || '{}'));
+    console.log('Shop:', localStorage.getItem('marks_selected_shop'));
+}
+
+function debugAPI() {
+    console.log('=== API DEBUG ===');
+    console.log('Admin API:', 'https://dnbeyd9uy7.execute-api.us-east-1.amazonaws.com/prod');
+    console.log('Shop API:', 'https://itkfalyn4k.execute-api.us-east-1.amazonaws.com/prod');
+    
+    // Test API connection
+    fetch('https://dnbeyd9uy7.execute-api.us-east-1.amazonaws.com/prod/product', {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('marks_inventory_token')}`
+        }
+    })
+    .then(response => {
+        console.log('API Response Status:', response.status);
+        console.log('API Response OK:', response.ok);
+        return response.text();
+    })
+    .then(text => {
+        console.log('API Response:', text.substring(0, 200));
+    })
+    .catch(error => {
+        console.error('API Test Error:', error);
+    });
+}
+
+// Add to window for console access
+window.debugAuth = debugAuth;
+window.debugAPI = debugAPI;
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Page loaded - Debug functions available: debugAuth(), debugAPI()');
+    debugAuth();
+});
+
+        // Navigation
+        document.querySelectorAll('.shop-menu-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = link.getAttribute('href').substring(1);
+                
+                // Update active link
+                document.querySelectorAll('.shop-menu-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Hide sidebar on mobile
+                document.getElementById('shopSidebar').classList.remove('active');
+                
+                // Show target section
+                document.querySelectorAll('.shop-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(`${target}Section`).classList.add('active');
+            });
+        });
+
+        // Close modal
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            });
+        });
+
+        // Close modal on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

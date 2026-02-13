@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Mark's Inventory</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AWS SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.985.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.11/dist/amazon-cognito-identity.min.js"></script>
+    <style>
+        .phone-input {
+            position: relative;
+        }
+        .phone-prefix {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-weight: 500;
+        }
+        .phone-input input {
+            padding-left: 60px !important;
+        }
+        .phone-format {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+            display: block;
+        }
+    </style>
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <!-- Left Panel -->
+        <div class="login-left">
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+            
+            <div class="login-brand">
+                <div class="brand-logo">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <h1>Mark's Inventory</h1>
+                <p class="brand-subtitle">Secure Inventory Management System</p>
+            </div>
+            
+            <div class="login-info">
+                <h3><i class="fas fa-info-circle"></i> Login Types</h3>
+                <div class="info-cards">
+                    <div class="info-card admin">
+                        <i class="fas fa-user-shield"></i>
+                        <div>
+                            <h4>Admin</h4>
+                            <p>Full system access across all shops</p>
+                        </div>
+                    </div>
+                    <div class="info-card attendant">
+                        <i class="fas fa-user-tie"></i>
+                        <div>
+                            <h4>Shop Attendant</h4>
+                            <p>Use phone number + password</p>
+                            <small>Format: 0541234567 or +233541234567</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="login-right">
+            <div class="login-card">
+                <!-- Tabs -->
+                <div class="login-tabs">
+                    <button class="tab-btn active" data-tab="admin">
+                        <i class="fas fa-user-shield"></i> Admin Login
+                    </button>
+                    <button class="tab-btn" data-tab="shop">
+                        <i class="fas fa-store"></i> Shop Login
+                    </button>
+                </div>
+
+                <!-- Admin Login Form -->
+                <div id="adminForm" class="login-form active">
+                    <h2>Admin Dashboard Access</h2>
+                    <p class="form-subtitle">Full administrative privileges</p>
+                    
+                    <form id="adminLoginForm">
+                        <div class="form-group">
+                            <label for="adminEmail">
+                                <i class="fas fa-envelope"></i> Email Address
+                            </label>
+                            <input type="email" id="adminEmail" 
+                                   placeholder="admin@marksinventory.com"
+                                   required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="adminPassword">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <div class="password-input">
+                                <input type="password" id="adminPassword" 
+                                       placeholder="Enter your password"
+                                       required>
+                                <button type="button" class="toggle-password" data-target="adminPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-sign-in-alt"></i> Sign In as Admin
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Shop Login Form -->
+                <div id="shopForm" class="login-form">
+                    <h2>Shop Attendant Login</h2>
+                    <p class="form-subtitle">Login with phone number and password</p>
+                    
+                    <form id="shopLoginForm">
+                        <div class="form-group">
+                            <label for="shopPhone">
+                                <i class="fas fa-phone"></i> Phone Number
+                            </label>
+                            <div class="phone-input">
+                                <span class="phone-prefix">+233</span>
+                                <input type="tel" id="shopPhone" 
+                                       placeholder="541234567"
+                                       pattern="[0-9]{9,10}"
+                                       title="Enter 9-10 digits after +233"
+                                       required>
+                            </div>
+                            <small class="phone-format">Format: 0541234567 or 541234567 (without +233)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="shopPassword">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <div class="password-input">
+                                <input type="password" id="shopPassword" 
+                                       placeholder="Enter your password"
+                                       required>
+                                <button type="button" class="toggle-password" data-target="shopPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="shopSelect">
+                                <i class="fas fa-store"></i> Shop Assignment
+                            </label>
+                            <select id="shopSelect" required>
+                                <option value="">Select your shop</option>
+                                <option value="Raymakossa">Raymakossa Shop</option>
+                                <option value="Tarso">Tarso Shop</option>
+                                <option value="Market">Market Shop</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-secondary btn-block">
+                            <i class="fas fa-sign-in-alt"></i> Sign In to Shop
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Error Display -->
+                <div id="loginError" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorText"></span>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loginLoading" class="loading-overlay" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Authenticating with AWS Cognito...</p>
+                </div>
+            </div>
+            
+            <div class="login-footer">
+                <p><i class="fas fa-shield-alt"></i> Secured by Amazon Cognito User Pools</p>
+                <p>Admin: Email + Password | Shop: Phone + Password</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { authenticateAdmin, authenticateShopAttendant } from './auth.js';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tab switching
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const forms = document.querySelectorAll('.login-form');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.tab;
+                    
+                    // Update tabs
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Update forms
+                    forms.forEach(form => form.classList.remove('active'));
+                    document.getElementById(`${tab}Form`).classList.add('active');
+                });
+            });
+            
+            // Password visibility toggle
+            document.querySelectorAll('.toggle-password').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.dataset.target;
+                    const input = document.getElementById(targetId);
+                    const icon = btn.querySelector('i');
+                    
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+            
+            // Format phone input
+            const phoneInput = document.getElementById('shopPhone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    
+                    // Remove leading 0 if present (for Ghana numbers)
+                    if (value.startsWith('0')) {
+                        value = value.substring(1);
+                    }
+                    
+                    e.target.value = value;
+                });
+                
+                phoneInput.addEventListener('blur', (e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value && (value.length < 9 || value.length > 10)) {
+                        showError('Phone number should be 9-10 digits');
+                    }
+                });
+            }
+            
+            // Admin login
+            document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('adminEmail').value.trim();
+                const password = document.getElementById('adminPassword').value;
+                
+                if (!email || !password) {
+                    showError('Please enter both email and password');
+                    return;
+                }
+                
+                showLoading(true);
+                clearError();
+                
+                try {
+                    console.log('Admin login attempt...');
+                    await authenticateAdmin(email, password);
+                    // Redirect happens in auth.js
+                } catch (error) {
+                    console.error('Admin login error:', error);
+                    showError(error.message || 'Authentication failed');
+                } finally {
+                    showLoading(false);
+                }
+            });
+            
+            // Shop login
+            document.getElementById('shopLoginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const phone = document.getElementById('shopPhone').value.trim();
+                const password = document.getElementById('shopPassword').value;
+                const shop = document.getElementById('shopSelect').value;
+                
+                if (!phone) {
+                    showError('Please enter your phone number');
+                    return;
+                }
+                
+                if (!password) {
+                    showError('Please enter your password');
+                    return;
+                }
+                
+                if (!shop) {
+                    showError('Please select your assigned shop');
+                    return;
+                }
+                
+                // Validate phone length
+                const phoneDigits = phone.replace(/\D/g, '');
+                if (phoneDigits.length < 9 || phoneDigits.length > 10) {
+                    showError('Phone number should be 9-10 digits');
+                    return;
+                }
+                
+                showLoading(true);
+                clearError();
+                
+                try {
+                    console.log('Shop login attempt...', { phone, shop });
+                    await authenticateShopAttendant(phone, password, shop);
+                    // Redirect happens in auth.js
+                } catch (error) {
+                    console.error('Shop login error:', error);
+                    showError(error.message || 'Authentication failed');
+                } finally {
+                    showLoading(false);
+                }
+            });
+            
+            // Check URL for role parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            
+            if (role === 'admin') {
+                document.querySelector('[data-tab="admin"]').click();
+            } else if (role === 'shop') {
+                document.querySelector('[data-tab="shop"]').click();
+            }
+            
+            // Helper functions
+            function showLoading(show) {
+                const loadingEl = document.getElementById('loginLoading');
+                if (loadingEl) {
+                    loadingEl.style.display = show ? 'flex' : 'none';
+                }
+            }
+            
+            function showError(message) {
+                const errorDiv = document.getElementById('loginError');
+                if (errorDiv) {
+                    document.getElementById('errorText').textContent = message;
+                    errorDiv.style.display = 'flex';
+                }
+            }
+            
+            function clearError() {
+                const errorDiv = document.getElementById('loginError');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+            }
+        });
+    </script>
+    
+    <!-- Debug Script -->
+    <script>
+        // Debug functions for development
+        window.debugLogin = {
+            testAdmin: () => {
+                document.querySelector('[data-tab="admin"]').click();
+                document.getElementById('adminEmail').value = 'admin@marks.com';
+                document.getElementById('adminPassword').value = 'Admin123!';
+                console.log('Test admin credentials filled');
+            },
+            testShop: (shop = 'Raymakossa') => {
+                document.querySelector('[data-tab="shop"]').click();
+                document.getElementById('shopPhone').value = '0541234567';
+                document.getElementById('shopPassword').value = 'Attendant123!';
+                document.getElementById('shopSelect').value = shop;
+                console.log(`Test shop credentials filled for ${shop}`);
+            },
+            checkAuth: () => {
+                console.log('Token:', localStorage.getItem('marks_inventory_token')?.substring(0, 30) + '...');
+                console.log('User:', JSON.parse(localStorage.getItem('marks_inventory_user') || '{}'));
+                console.log('Shop:', localStorage.getItem('marks_selected_shop'));
+            }
+        };
+        
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('🛠️  Debug functions available:');
+            console.log('- debugLogin.testAdmin() - Fill test admin credentials');
+            console.log('- debugLogin.testShop("Raymakossa") - Fill test shop credentials');
+            console.log('- debugLogin.checkAuth() - Check current auth state');
+        }
+    </script>
+</body>
+</html>
